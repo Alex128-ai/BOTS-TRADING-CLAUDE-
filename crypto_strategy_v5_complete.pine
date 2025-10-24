@@ -312,8 +312,8 @@ if cond_long and not trading_halted and barstate.isconfirmed
         trail_stop := i_use_trailing ? entry_price - (atr * i_trail_atr_mult) : na
 
         // Ordre
-        strategy.entry("Long", strategy.long, qty=pos_size, comment="LONG",
-                      alert_message='{"side":"long","action":"entry","price":' + str.tostring(close) + ',"symbol":"' + syminfo.ticker + '","timestamp":' + str.tostring(time) + ',"reason":"signal"}')
+        alert_msg = '{"side":"long","action":"entry","price":' + str.tostring(close) + ',"symbol":"' + syminfo.ticker + '","timestamp":' + str.tostring(time) + ',"reason":"signal"}'
+        strategy.entry("Long", strategy.long, qty=pos_size, comment="LONG", alert_message=alert_msg)
 
 // =====================================================================
 // ENTRÉES SHORT
@@ -339,8 +339,8 @@ if cond_short and not trading_halted and barstate.isconfirmed
         trail_stop := i_use_trailing ? entry_price + (atr * i_trail_atr_mult) : na
 
         // Ordre
-        strategy.entry("Short", strategy.short, qty=pos_size, comment="SHORT",
-                      alert_message='{"side":"short","action":"entry","price":' + str.tostring(close) + ',"symbol":"' + syminfo.ticker + '","timestamp":' + str.tostring(time) + ',"reason":"signal"}')
+        alert_msg = '{"side":"short","action":"entry","price":' + str.tostring(close) + ',"symbol":"' + syminfo.ticker + '","timestamp":' + str.tostring(time) + ',"reason":"signal"}'
+        strategy.entry("Short", strategy.short, qty=pos_size, comment="SHORT", alert_message=alert_msg)
 
 // =====================================================================
 // GESTION TRAILING STOP
@@ -362,30 +362,30 @@ if strategy.position_size < 0 and i_use_trailing and not na(trail_stop)
 
 // Stop Loss
 if strategy.position_size > 0 and not na(stop_loss)
-    strategy.exit("SL_Long", "Long", stop=stop_loss, limit=take_profit1,
-                  alert_message='{"side":"long","action":"exit","type":"sl","price":' + str.tostring(close) + ',"timestamp":' + str.tostring(time) + '}')
+    alert_msg_sl_long = '{"side":"long","action":"exit","type":"sl","price":' + str.tostring(close) + ',"timestamp":' + str.tostring(time) + '}'
+    strategy.exit("SL_Long", "Long", stop=stop_loss, limit=take_profit1, alert_message=alert_msg_sl_long)
 
 if strategy.position_size < 0 and not na(stop_loss)
-    strategy.exit("SL_Short", "Short", stop=stop_loss, limit=take_profit1,
-                  alert_message='{"side":"short","action":"exit","type":"sl","price":' + str.tostring(close) + ',"timestamp":' + str.tostring(time) + '}')
+    alert_msg_sl_short = '{"side":"short","action":"exit","type":"sl","price":' + str.tostring(close) + ',"timestamp":' + str.tostring(time) + '}'
+    strategy.exit("SL_Short", "Short", stop=stop_loss, limit=take_profit1, alert_message=alert_msg_sl_short)
 
 // Trailing Stop
 if strategy.position_size > 0 and i_use_trailing and not na(trail_stop)
-    strategy.exit("Trail_Long", "Long", stop=trail_stop,
-                  alert_message='{"side":"long","action":"exit","type":"trailing","price":' + str.tostring(close) + ',"timestamp":' + str.tostring(time) + '}')
+    alert_msg_trail_long = '{"side":"long","action":"exit","type":"trailing","price":' + str.tostring(close) + ',"timestamp":' + str.tostring(time) + '}'
+    strategy.exit("Trail_Long", "Long", stop=trail_stop, alert_message=alert_msg_trail_long)
 
 if strategy.position_size < 0 and i_use_trailing and not na(trail_stop)
-    strategy.exit("Trail_Short", "Short", stop=trail_stop,
-                  alert_message='{"side":"short","action":"exit","type":"trailing","price":' + str.tostring(close) + ',"timestamp":' + str.tostring(time) + '}')
+    alert_msg_trail_short = '{"side":"short","action":"exit","type":"trailing","price":' + str.tostring(close) + ',"timestamp":' + str.tostring(time) + '}'
+    strategy.exit("Trail_Short", "Short", stop=trail_stop, alert_message=alert_msg_trail_short)
 
 // Sorties sur signal inverse (optionnel)
 if strategy.position_size > 0 and cond_short and barstate.isconfirmed
-    strategy.close("Long", comment="Reverse Signal",
-                   alert_message='{"side":"long","action":"exit","type":"reverse","price":' + str.tostring(close) + ',"timestamp":' + str.tostring(time) + '}')
+    alert_msg_rev_long = '{"side":"long","action":"exit","type":"reverse","price":' + str.tostring(close) + ',"timestamp":' + str.tostring(time) + '}'
+    strategy.close("Long", comment="Reverse Signal", alert_message=alert_msg_rev_long)
 
 if strategy.position_size < 0 and cond_long and barstate.isconfirmed
-    strategy.close("Short", comment="Reverse Signal",
-                   alert_message='{"side":"short","action":"exit","type":"reverse","price":' + str.tostring(close) + ',"timestamp":' + str.tostring(time) + '}')
+    alert_msg_rev_short = '{"side":"short","action":"exit","type":"reverse","price":' + str.tostring(close) + ',"timestamp":' + str.tostring(time) + '}'
+    strategy.close("Short", comment="Reverse Signal", alert_message=alert_msg_rev_short)
 
 // =====================================================================
 // SECTION 9: ALERTES
@@ -473,32 +473,34 @@ if barstate.islast
     table.cell(metrics_table, 1, 7, str.tostring(total_trades), text_color=color.aqua)
 
     table.cell(metrics_table, 0, 8, "Winrate", text_color=color.white)
-    table.cell(metrics_table, 1, 8, str.tostring(winrate, "#.##") + "%",
-               text_color=winrate >= 50 ? color.green : color.red)
+    winrate_color = winrate >= 50 ? color.green : color.red
+    table.cell(metrics_table, 1, 8, str.tostring(winrate, "#.##") + "%", text_color=winrate_color)
 
     table.cell(metrics_table, 0, 9, "Profit Factor", text_color=color.white)
-    table.cell(metrics_table, 1, 9, str.tostring(profit_factor, "#.##"),
-               text_color=profit_factor >= 1.5 ? color.green : profit_factor >= 1 ? color.yellow : color.red)
+    pf_color = profit_factor >= 1.5 ? color.green : profit_factor >= 1 ? color.yellow : color.red
+    table.cell(metrics_table, 1, 9, str.tostring(profit_factor, "#.##"), text_color=pf_color)
 
     table.cell(metrics_table, 0, 10, "Net Profit", text_color=color.white)
-    table.cell(metrics_table, 1, 10, str.tostring(strategy.netprofit, "#.##") + "$",
-               text_color=strategy.netprofit > 0 ? color.green : color.red)
+    np_color = strategy.netprofit > 0 ? color.green : color.red
+    table.cell(metrics_table, 1, 10, str.tostring(strategy.netprofit, "#.##") + "$", text_color=np_color)
 
     table.cell(metrics_table, 0, 11, "DD Actuel", text_color=color.white)
-    table.cell(metrics_table, 1, 11, str.tostring(current_dd, "#.##") + "%",
-               text_color=current_dd > i_max_dd_pct * 0.8 ? color.red : color.green)
+    dd_color = current_dd > i_max_dd_pct * 0.8 ? color.red : color.green
+    table.cell(metrics_table, 1, 11, str.tostring(current_dd, "#.##") + "%", text_color=dd_color)
 
     table.cell(metrics_table, 0, 12, "Sentiment", text_color=color.white)
-    table.cell(metrics_table, 1, 12, str.tostring(sentiment, "#.##"),
-               text_color=sentiment > 0 ? color.green : sentiment < 0 ? color.red : color.gray)
+    sent_color = sentiment > 0 ? color.green : sentiment < 0 ? color.red : color.gray
+    table.cell(metrics_table, 1, 12, str.tostring(sentiment, "#.##"), text_color=sent_color)
 
     table.cell(metrics_table, 0, 13, "MTF Confirm", text_color=color.white)
-    table.cell(metrics_table, 1, 13, mtf_bull ? "BULL" : mtf_bear ? "BEAR" : "NEUTRE",
-               text_color=mtf_bull ? color.green : mtf_bear ? color.red : color.gray)
+    mtf_text = mtf_bull ? "BULL" : mtf_bear ? "BEAR" : "NEUTRE"
+    mtf_color = mtf_bull ? color.green : mtf_bear ? color.red : color.gray
+    table.cell(metrics_table, 1, 13, mtf_text, text_color=mtf_color)
 
     table.cell(metrics_table, 0, 14, "Trading Halted", text_color=color.white)
-    table.cell(metrics_table, 1, 14, trading_halted ? "OUI" : "NON",
-               text_color=trading_halted ? color.red : color.green)
+    halt_text = trading_halted ? "OUI" : "NON"
+    halt_color = trading_halted ? color.red : color.green
+    table.cell(metrics_table, 1, 14, halt_text, text_color=halt_color)
 
 // =====================================================================
 // CHECKLIST DE VALIDATION
